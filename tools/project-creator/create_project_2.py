@@ -20,14 +20,18 @@ platforms_list = []
 
 frameworksDest = "proj/Frameworks"
 frameworks = {
+"cocos2d_libs.xcodeproj" : "../../cocos2d_libs.xcodeproj",
+"cocos2d-win32.vc2012.sln" : "../../cocos2d-win32.vc2012.sln",
 "cocos2dx" : "../../cocos2dx",
 "CocosDenshion" : "../../CocosDenshion",
-"Box2D" : "../../external/Box2D",
-"chipmunk" : "../../external/chipmunk",
-"emscrpten" : "../../external/emscripten",
-"libwebsockets" : "../../external/libwebsockets",
-"sqlite3" : "../../external/sqlite3",
-"extentions" : "../../extensions",
+"extensions" : "../../extensions",
+"external/Box2D" : "../../external/Box2D",
+"external/chipmunk" : "../../external/chipmunk",
+"external/emscrpten" : "../../external/emscripten",
+"external/libwebsockets" : "../../external/libwebsockets",
+"external/sqlite3" : "../../external/sqlite3", 
+"scripting/javascript" : "../../scripting/javascript", 
+"scripting/lua" : "../../scripting/lua", 
 }
 
 
@@ -276,8 +280,12 @@ if context["dst_upgrade_path"] != "undefined":
                 
                 if (os.path.exists(destinationPath) == True):
                     shutil.rmtree(destinationPath, ignore_errors=True);
-
-                shutil.copytree( sourcePath, destinationPath, symlinks=False, ignore=ignore_patterns('.*'))
+                
+                if (os.path.isdir(sourcePath) == True):
+                    shutil.copytree( sourcePath, destinationPath, symlinks=False, ignore=ignore_patterns('.*') )
+                else:
+                    shutil.copyfile ( sourcePath, destinationPath )
+                
                 print "Updated framework: " + framework
 
 
@@ -312,15 +320,34 @@ else:
         os.makedirs ( frameworksPath )
 
         # relative path to the project
-        fixPathOrig = []
-        fixPathDest = []
+        fixPathOrig = [ 
+                        "../../../..", 
+                        " ../../cocos2dx", 
+                        " ../classes",
+                        "path = ../Classes/AppDelegate.cpp;",
+                        "path = ../Classes/AppDelegate.h;",
+                        "path = ../Classes/HelloWorldScene.cpp;",
+                        "path = ../Classes/HelloWorldScene.h;",
+                        ]
+        fixPathDest = [ 
+                        "../"+frameworksDest, 
+                        " ../"+frameworksDest+"/cocos2dx", 
+                        " ../proj/classes",
+                        "path = AppDelegate.cpp;",
+                        "path = AppDelegate.h;",
+                        "path = HelloWorldScene.cpp;",
+                        "path = HelloWorldScene.h;",
+                         ]
 
         # copy frameworks into the folder
         for framework in frameworks.keys():
             frameworkPath = frameworks[framework]
             sourcePath = context["src_project_path"]+"/"+frameworkPath
             destinationPath = os.path.join ( frameworksPath, framework )
-            shutil.copytree( sourcePath, destinationPath, symlinks=False, ignore=ignore_patterns('.*'))
+            if (os.path.isdir(sourcePath) == True):
+                shutil.copytree( sourcePath, destinationPath, symlinks=False, ignore=ignore_patterns('.*') )
+            else:
+                shutil.copyfile ( sourcePath, destinationPath )
             fixPathOrig.append ( frameworkPath )
             fixPathOrig.append ( frameworkPath.replace("/", "\\") )
             fixPathDest.append ( os.path.join ( frameworksDest, framework ) )
